@@ -24,11 +24,20 @@ $(function() {
         /* TODO:
          * 编写一个测试遍历 allFeeds 对象里面的所有的源来保证有链接字段而且链接不是空的。
          */
+
+        var sameDetection = function (n) {
+            for(var i = 0; i < allFeeds.length; i++){
+                expect(allFeeds[i].n).toBeDefined();
+                expect(allFeeds[i].n).not.toBe("");
+            }
+        };
+
         it('Feeds URL are defined and not empty', function() {
             for(var i = 0; i < allFeeds.length; i++){
                 expect(allFeeds[i].url).toBeDefined();
                 expect(allFeeds[i].url).not.toBe("");
             }
+            //sameDetection(url);
         });
 
         /* TODO:
@@ -39,6 +48,7 @@ $(function() {
                 expect(allFeeds[i].name).toBeDefined();
                 expect(allFeeds[i].name).not.toBe("");
             }
+            //sameDetection(name);
         });
 
     });
@@ -79,15 +89,40 @@ $(function() {
          * 记住 loadFeed() 函数是异步的所以这个而是应该使用 Jasmine 的 beforeEach
          * 和异步的 done() 函数。
          */
+        //beforeEach(function (done) {
+        //    loadFeed(0, function () {
+        //        done();
+        //    })
+        //});
+//        我们来梳理一下两者的执行过程，分析出为什么可以进行简化：
+//
+//loadFeed(0, function() {
+//    done();
+//}); // 简化前
+//        上面的函数其实就是在调用 js——>app.js 中的 loadFeed 函数，该函数接收两个参数，一个是数字类型，一个是函数类型。忽略掉函数内部其他逻辑代码，专注于第二个参数的调用，可以写出如下的伪代码：
+//
+//function loadFeed(id, cb) {
+//    cb = function() {
+//        done();
+//    } // 参数cb就等于我们的在开头传递的第二个参数：匿名函数。
+//
+//    cb(); // 调用函数。此时执行 cb ，本质上就是在执行 feedreader.js 中 beforeEach 的可选参数 `done`，即 cb() == done() . 当done函数被调用，表明异步操作的回调函数调用成功.
+//}
+//        loadFeed(0, done); // 简化后
+//        简化后的伪代码：
+//
+//function loadFeed(id, cb) {
+//    cb = done;
+//    cb(); // 看出效果没有呢？ 此时的cb就是 beforeEach 中传递的 done 函数，调用 cb 就等同于 调用 done
+//}
+//        上面两者的区别就在于，省去了外层匿名函数 function(){...} 的包装，而这层包装是可以省略的，对执行效果没有影响，所以我们可以对其进行简化。
         beforeEach(function (done) {
-            loadFeed(0, function () {
-                done();
-            })
+            loadFeed(0, done)
         });
 
-        it('loadFeed worked', function (done) {
+
+        it('loadFeed worked', function () {
             expect($('.feed .entry').length).not.toBe(0);
-            done();
         })
     });
 
@@ -98,20 +133,15 @@ $(function() {
          * 记住，loadFeed() 函数是异步的。
          */
     describe('New Feed Selection', function () {
-        var feed0;
-        for(var i = 1; i < allFeeds.length; i++){
+        var feed0 = $('.feed').text();
             beforeEach(function (done) {
                 loadFeed(0, function () {
-                    feed0 = $('.feed').text();
-                    loadFeed(i, function () {
-                        done();
-                    })
+                    loadFeed(1, done)
                 })
             });
 
-            it('load new source will be different', function (done) {
+            it('load new source will be different', function () {
                 expect($('.feed').text() != feed0).toBe(true);
             })
-        }
     })
 }());
