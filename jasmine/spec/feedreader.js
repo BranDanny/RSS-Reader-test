@@ -121,8 +121,9 @@ $(function() {
         });
 
 
-        it('loadFeed worked', function () {
+        it('loadFeed worked', function (done) {
             expect($('.feed .entry').length).not.toBe(0);
+            done();
         })
     });
 
@@ -140,8 +141,9 @@ $(function() {
                 })
             });
 
-            it('load new source will be different', function () {
+            it('load new source will be different', function (done) {
                 expect($('.feed').text() != feed0).toBe(true);
+                done();
             })
     })
 }());
